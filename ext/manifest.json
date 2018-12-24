@@ -1,0 +1,21 @@
+{
+  "name": "DW new comments",
+  "version": "0.1",
+  "manifest_version": 2,
+  "description": "When loading DreamWidth comments pages, mark new comments",
+  "icons": { "128": "icons/icon_128_blue.png" },
+  "permissions" : [
+    "activeTab",
+    "storage"
+  ],
+  "page_action": {
+    "default_name": "DW comments",
+    "default_icon": { "128": "icons/icon_128_blue.png" }
+  },
+  "content_scripts": [
+   {
+     "matches": ["https://*.dreamwidth.org/*"],
+     "css": ["css/cs.css"],
+     "js": ["scripts/moment.min.js", "scripts/cs.js"]
+   } ]
+}
