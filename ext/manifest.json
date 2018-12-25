@@ -4,13 +4,18 @@
   "manifest_version": 2,
   "description": "When loading DreamWidth comments pages, mark new comments",
   "icons": { "128": "icons/icon_128_blue.png" },
+  "background": {
+    "scripts": ["scripts/bg.js"],
+    "persistent": false
+  },
   "permissions" : [
     "activeTab",
     "storage"
   ],
   "page_action": {
     "default_name": "DW comments",
-    "default_icon": { "128": "icons/icon_128_blue.png" }
+    "default_icon": { "128": "icons/icon_128_blue.png" },
+    "default_popup": "html/popup.html"
   },
   "content_scripts": [
    {

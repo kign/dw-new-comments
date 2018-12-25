@@ -2,6 +2,7 @@ span.isnew {
   color: red;
 }
 
-span.isnew:after {
-  content: " new"
+span.isnew::after {
+  content: " \2713";
+  color: green;
 }
