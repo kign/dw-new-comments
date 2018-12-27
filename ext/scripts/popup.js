@@ -1,7 +1,7 @@
 'use strict'
 
-let dbgElm = document.getElementById('dbg');
-dbgElm.innerHTML = localStorage.ukey;
+let srcElm = document.getElementById('src');
+srcElm.innerHTML = localStorage.ukey;
 
 let listElm = document.getElementById('list');
 
