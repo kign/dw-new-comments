@@ -25,13 +25,37 @@ function markup (ts) {
   return last;
 }
 
+function eligible_url() {
+  let host = document.location.hostname;
+  let path = document.location.pathname;
+  let pars = document.location.search;
+
+  let m = RegExp("^([a-z0-9-]+).dreamwidth.org$").exec(host);
+  if (!m)
+    return null;
+  let uname = m[1];
+
+  m = RegExp("^/([0-9]+).html$").exec(path);
+  if (!m)
+    return null;
+  let postid = m[1];
+
+  if (pars) {
+    let query = pars.substr(1);
+    for (let part of query.split("&")) {
+      var item = part.split("=");
+      let k = item[0];
+      let v = decodeURIComponent(item[1]);
+      if (!['nc','style'].includes(k))
+        return null;
+    }
+  }
+  return uname + "_" + postid;
+}
+
 function first_run () {
-  let r = RegExp("^https://([a-z0-9-]+).dreamwidth.org/([0-9]+).html$");
-  let m = r.exec(document.location.href);
-  if (m) {
-    let uname = m[1];
-    let postid = m[2];
-    let ukey = uname + "_" + postid;
+  let ukey = eligible_url ();
+  if (ukey) {
     console.log("enabled");
 
     let arg_get = {};
