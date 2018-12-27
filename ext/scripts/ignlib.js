@@ -17,3 +17,10 @@ function makeElm (tag, attrs, ...children) {
 
   return node;
 }
+
+function xpath_do(elm, xp, action) {
+  let result = document.evaluate(xp, elm, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+
+  for (let ii=0 ; ii < result.snapshotLength; ii ++ )
+    action(result.snapshotItem(ii), ii);
+}
