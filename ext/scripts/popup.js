@@ -1,13 +1,18 @@
 'use strict'
 
 let srcElm = document.getElementById('src');
-srcElm.innerHTML = localStorage.ukey;
-
 let listElm = document.getElementById('list');
+let errElm = document.getElementById('error');
 
 let ukey = localStorage.ukey;
+srcElm.innerHTML = ukey;
 let arg_get = {};
 arg_get[ukey] = [];
+
+if (localStorage.unparsable_stamp != '')
+  errElm.innerHTML = "Bad stamp: <font color='red'>" + localStorage.unparsable_stamp + "</font>";
+else
+  errElm.innerHTML = '';
 
 document.getElementById('options').onclick = function () {
   chrome.runtime.openOptionsPage();
