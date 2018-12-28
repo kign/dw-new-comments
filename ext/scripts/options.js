@@ -29,12 +29,18 @@ function save_options(evt) {
 function restore_options() {
   chrome.runtime.sendMessage(
     {get_default: true}, function(response) {
-      console.log("Get response", response);
+      console.log("Got response", response);
       chrome.storage.sync.get(response,
-          //{comment_css: response.comment_css},
-      function(items) {
-        _write(items);
-      });
+        function(items) {
+          let res = {};
+          for (let k in response) {
+            if (!k.endsWith('_ver') && response[k + "_ver"] > items[k + "_ver"])
+                res[k] = response[k];
+            else
+                res[k] = items[k];
+          }
+          _write(res);
+        });
     });
 }
 
