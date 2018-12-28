@@ -1,8 +1,0 @@
-span.isnew {
-  color: red;
-}
-
-span.isnew::after {
-  content: " \2713";
-  color: green;
-}

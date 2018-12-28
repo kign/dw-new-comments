@@ -46,7 +46,7 @@ function eligible_url() {
       var item = part.split("=");
       let k = item[0];
       let v = decodeURIComponent(item[1]);
-      if (!['nc','style'].includes(k))
+      if (!['nc','style','posted','view'].includes(k))
         return null;
     }
   }

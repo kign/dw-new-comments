@@ -9,6 +9,10 @@ let ukey = localStorage.ukey;
 let arg_get = {};
 arg_get[ukey] = [];
 
+document.getElementById('options').onclick = function () {
+  chrome.runtime.openOptionsPage();
+}
+
 function show_snapshots(snapshots_a) {
   for (let ts of snapshots_a)
     listElm.appendChild(makeElm('DIV', {id: ts},
@@ -42,6 +46,7 @@ function activate(evt) {
   let ts = node.parentNode.getAttribute('id');
   console.log("Switching to", ts, "=", moment.unix(ts).format('YYYY-MM-DD HH:mm'));
   set_checkmark(ts);
+  localStorage[ukey] = ts;
   chrome.tabs.sendMessage(parseInt(localStorage.tabid), {ts: ts});
 }
 

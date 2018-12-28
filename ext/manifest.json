@@ -10,8 +10,14 @@
   },
   "permissions" : [
     "activeTab",
-    "storage"
+    "storage",
+    "https://*.dreamwidth.org/*"
   ],
+  "options_ui": {
+    "page": "html/options.html",
+    "chrome_style": true,
+    "open_in_tab": true
+  },
   "page_action": {
     "default_name": "DW comments",
     "default_icon": { "128": "icons/icon_128_blue.png" },
@@ -20,7 +26,6 @@
   "content_scripts": [
    {
      "matches": ["https://*.dreamwidth.org/*"],
-     "css": ["css/cs.css"],
      "js": ["scripts/moment.min.js", "scripts/cs.js"]
    } ]
 }
