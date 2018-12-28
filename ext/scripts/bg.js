@@ -1,9 +1,11 @@
 'use strict'
-
 const default_options = {
   time_formats:
 `dddd, MMMM Do gggg HH:mm
+YYYY-MM-DD hh:mm a
 YYYY-MM-DD HH:mm`,
+  time_formats_ver: 2,
+
   comment_css:
 `span.isnew {
   color: red;
@@ -13,7 +15,8 @@ span.isnew::after {
   color: black;
   background-color: yellow;
   font-variant: small-caps;
-}`};
+}`,
+ comment_css_ver: 2};
 
 chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
   if (req.get_default) {
@@ -27,9 +30,13 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
     localStorage.tabid = sender.tab.id;
     if (req.ts)
       localStorage[req.ukey] = req.ts;
-    chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_green.png'});
+    if (req.unparsable_stamp)
+      chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_err.png'});
+    else
+      chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_green.png'});
     chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Click for more control"});
     if (req.enable) {
+      localStorage.unparsable_stamp = req.unparsable_stamp;
       chrome.storage.sync.get(
           {comment_css: default_options.comment_css},
       function(items) {

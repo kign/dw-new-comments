@@ -1,6 +1,6 @@
 'use strict';
 
-function markup (ts) {
+function markup (ts, callback) {
   const xp_ts_span = "//span[@class='datetime']/span[@title]";
   chrome.runtime.sendMessage(
     {get_default: true}, function(response) {
@@ -14,7 +14,7 @@ function markup (ts) {
           if (x1 != '')
             time_formats.push(x1);
         }
-        _markup(ts, xp_ts_span, time_formats);
+        callback(ts, xp_ts_span, time_formats);
       });
     });
 }
@@ -23,25 +23,34 @@ function _markup (ts, xp_ts_span, time_formats) {
   let span_a = document.evaluate(xp_ts_span, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
   let last = 0;
+  let unparsable_stamp = '';
+
   for (let ii=0 ; ii < span_a.snapshotLength; ii ++ ) {
     let node = span_a.snapshotItem(ii);
     let d = node.textContent;
 //    let m = moment(d,["dddd, MMMM Do gggg HH:mm", "YYYY-MM-DD HH:mm"]);
-    let m = moment(d,time_formats);
-    if (m.isValid()) {
-      //console.log(d + " ==> " + m.format());
-      if (ts && m.unix() > ts)
+    const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(d.toLowerCase());
+    let mo;
+    if (ma) {
+      if (ma[2] == "local")
+        mo = moment(ma[1],time_formats);
+      else
+        mo = moment.utc(ma[1],time_formats);
+    }
+    if (mo && mo.isValid()) {
+      if (ts && mo.unix() > ts)
         node.classList.add('isnew');
       else
         node.classList.remove('isnew');
-
-      last = Math.max(last,m.unix());
+      last = Math.max(last,mo.unix());
     }
-    else
+    else {
+      if (!unparsable_stamp)
+        unparsable_stamp = d;
       console.log(d + ": INVALID");
+    }
   }
-
-  return last;
+  return [last, unparsable_stamp];
 }
 
 function eligible_url() {
@@ -81,11 +90,17 @@ function first_run () {
     arg_get[ukey] = [];
 
     chrome.storage.sync.get(arg_get,
-          function(saved) {
-            let cur = saved[ukey].slice();
-            let ts = cur? cur[cur.length-1]: null;
-            chrome.runtime.sendMessage({ukey: ukey, enable: true, ts: ts});
-            let last = markup(ts);
+      function(saved) {
+        let cur = saved[ukey].slice();
+        let ts = cur? cur[cur.length-1]: null;
+        markup(ts,
+          function(ts, xp_ts_span, time_formats){
+            const res = _markup (ts, xp_ts_span, time_formats);
+            const last = res[0];
+            chrome.runtime.sendMessage({ukey: ukey,
+                                        enable: true,
+                                        ts: ts,
+                                        unparsable_stamp: res[1]});
             console.log("cur =", cur, "last =", last);
             if (last>0 && !(cur.length > 0 && cur[cur.length - 1] == last)) {
               cur.push(last);
@@ -96,7 +111,9 @@ function first_run () {
                   console.log("Saved", cur);
                 });
             }
-          });
+      });
+    });
+    // not sure if this is still necessary
     document.onvisibilitychange = function() {
       console.log("url =", document.location.href + "; visible =", !document.hidden);
       chrome.runtime.sendMessage({ukey: ukey, visible: !document.hidden});
@@ -113,7 +130,10 @@ chrome.runtime.onMessage.addListener(
     console.log("Received message from", sender);
     let ts = request.ts;
     console.log("Switching to", ts, "=", moment.unix(ts).format('YYYY-MM-DD HH:mm'));
-    markup(ts);
+    markup(ts,
+      function(ts, xp_ts_span, time_formats){
+        const res = _markup (ts, xp_ts_span, time_formats);
+      });
   });
 
 first_run ();
