@@ -16,13 +16,20 @@ function _read () {
 
 function save_options(evt) {
   evt.preventDefault();
-  chrome.storage.sync.set(_read(),
-    function() {
-      var status = document.getElementById('status');
-      status.textContent = 'Options saved.';
-      setTimeout(function() {
-        status.textContent = '';
-      }, 1200);
+  chrome.runtime.sendMessage(
+    {get_default: true}, function(response) {
+      let opts = _read();
+      for (let k in response)
+        if (k.endsWith('_ver'))
+          opts[k] = response[k];
+      chrome.storage.sync.set(opts,
+        function() {
+          var status = document.getElementById('status');
+          status.textContent = 'Options saved.';
+          setTimeout(function() {
+            status.textContent = '';
+          }, 1200);
+        });
     });
 }
 

@@ -4,7 +4,7 @@ const default_options = {
 `dddd, MMMM Do gggg HH:mm
 YYYY-MM-DD hh:mm a
 YYYY-MM-DD HH:mm`,
-  time_formats_ver: 2,
+  time_formats_ver: 1,
 
   comment_css:
 `span.isnew {
@@ -16,7 +16,7 @@ span.isnew::after {
   background-color: yellow;
   font-variant: small-caps;
 }`,
- comment_css_ver: 2};
+ comment_css_ver: 1};
 
 chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
   if (req.get_default) {
@@ -38,10 +38,12 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
     if (req.enable) {
       localStorage.unparsable_stamp = req.unparsable_stamp;
       chrome.storage.sync.get(
-          {comment_css: default_options.comment_css},
+          {comment_css: default_options.comment_css,
+           comment_css_ver: default_options.comment_css_ver},
       function(items) {
         console.log("injected", items.comment_css);
-        chrome.tabs.insertCSS(sender.tab.id, {code: items.comment_css});
+        const comment_css = (default_options.comment_css_ver > items.comment_css_ver)? default_options.comment_css : items.comment_css;
+        chrome.tabs.insertCSS(sender.tab.id, {code: comment_css});
       });
     }
   }

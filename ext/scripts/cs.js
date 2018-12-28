@@ -3,18 +3,20 @@
 function markup (ts, callback) {
   const xp_ts_span = "//span[@class='datetime']/span[@title]";
   chrome.runtime.sendMessage(
-    {get_default: true}, function(response) {
-      console.log("Get response", response);
+    {get_default: true}, function(default_options) {
+      console.log("Get default_options", default_options);
       chrome.storage.sync.get(
-          {time_formats: response.time_formats},
+          {time_formats: default_options.time_formats,
+          time_formats_ver: default_options.time_formats_ver},
       function(items) {
-        let time_formats = [];
-        for (let x of items.time_formats.split("\n")) {
+        const time_formats = (default_options.time_formats_ver > items.time_formats_ver)? default_options.time_formats : items.time_formats;
+        let time_formats_arr = [];
+        for (let x of time_formats.split("\n")) {
           const x1 = x.trim();
           if (x1 != '')
-            time_formats.push(x1);
+            time_formats_arr.push(x1);
         }
-        callback(ts, xp_ts_span, time_formats);
+        callback(ts, xp_ts_span, time_formats_arr);
       });
     });
 }
@@ -28,7 +30,6 @@ function _markup (ts, xp_ts_span, time_formats) {
   for (let ii=0 ; ii < span_a.snapshotLength; ii ++ ) {
     let node = span_a.snapshotItem(ii);
     let d = node.textContent;
-//    let m = moment(d,["dddd, MMMM Do gggg HH:mm", "YYYY-MM-DD HH:mm"]);
     const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(d.toLowerCase());
     let mo;
     if (ma) {
