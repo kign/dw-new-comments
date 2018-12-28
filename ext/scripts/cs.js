@@ -1,14 +1,33 @@
 'use strict';
 
 function markup (ts) {
-  let xp_ts_span = "//span[@class='datetime']/span[@title]";
+  const xp_ts_span = "//span[@class='datetime']/span[@title]";
+  chrome.runtime.sendMessage(
+    {get_default: true}, function(response) {
+      console.log("Get response", response);
+      chrome.storage.sync.get(
+          {time_formats: response.time_formats},
+      function(items) {
+        let time_formats = [];
+        for (let x of items.time_formats.split("\n")) {
+          const x1 = x.trim();
+          if (x1 != '')
+            time_formats.push(x1);
+        }
+        _markup(ts, xp_ts_span, time_formats);
+      });
+    });
+}
+
+function _markup (ts, xp_ts_span, time_formats) {
   let span_a = document.evaluate(xp_ts_span, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
   let last = 0;
   for (let ii=0 ; ii < span_a.snapshotLength; ii ++ ) {
     let node = span_a.snapshotItem(ii);
     let d = node.textContent;
-    let m = moment(d,["dddd, MMMM Do gggg HH:mm", "YYYY-MM-DD HH:mm"]);
+//    let m = moment(d,["dddd, MMMM Do gggg HH:mm", "YYYY-MM-DD HH:mm"]);
+    let m = moment(d,time_formats);
     if (m.isValid()) {
       //console.log(d + " ==> " + m.format());
       if (ts && m.unix() > ts)

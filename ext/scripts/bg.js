@@ -1,6 +1,9 @@
 'use strict'
 
 const default_options = {
+  time_formats:
+`dddd, MMMM Do gggg HH:mm
+YYYY-MM-DD HH:mm`,
   comment_css:
 `span.isnew {
   color: red;
