@@ -1,7 +1,6 @@
 'use strict';
 
-function markup (ts, callback) {
-  const xp_ts_span = "//span[@class='datetime']/span[@title]";
+function with_time_formats (callback) {
   chrome.runtime.sendMessage(
     {get_default: true}, function(default_options) {
       console.log("Get default_options", default_options);
@@ -16,34 +15,49 @@ function markup (ts, callback) {
           if (x1 != '')
             time_formats_arr.push(x1);
         }
-        callback(ts, xp_ts_span, time_formats_arr);
+        callback(time_formats_arr);
       });
     });
 }
 
-function _markup (ts, xp_ts_span, time_formats) {
+function parse_time_string(time_string, time_formats) {
+  const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(time_string.toLowerCase());
+  if (!ma)
+    return null;
+
+  let mo;
+  if (ma[2] == "local")
+    mo = moment(ma[1],time_formats);
+  else
+    mo = moment.utc(ma[1],time_formats);
+
+  if (!mo)
+    return null;
+
+  if (!mo.isValid())
+    return null;
+
+  return mo.unix ();
+}
+
+function markup (ts, time_formats) {
+  const xp_ts_span = "//span[@class='datetime']/span[@title]";
   let span_a = document.evaluate(xp_ts_span, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
   let last = 0;
   let unparsable_stamp = '';
 
   for (let ii=0 ; ii < span_a.snapshotLength; ii ++ ) {
-    let node = span_a.snapshotItem(ii);
-    let d = node.textContent;
-    const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(d.toLowerCase());
-    let mo;
-    if (ma) {
-      if (ma[2] == "local")
-        mo = moment(ma[1],time_formats);
-      else
-        mo = moment.utc(ma[1],time_formats);
-    }
-    if (mo && mo.isValid()) {
-      if (ts && mo.unix() > ts)
+    const node = span_a.snapshotItem(ii);
+    const ts_this = parse_time_string(node.textContent, time_formats);
+
+    if (ts_this) {
+      if (ts && ts_this > ts)
         node.classList.add('isnew');
       else
         node.classList.remove('isnew');
-      last = Math.max(last,mo.unix());
+
+      last = Math.max(last, ts_this);
     }
     else {
       if (!unparsable_stamp)
@@ -51,6 +65,30 @@ function _markup (ts, xp_ts_span, time_formats) {
       console.log(d + ": INVALID");
     }
   }
+
+  //   let d = node.textContent;
+  //   const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(d.toLowerCase());
+  //   let mo;
+  //   if (ma) {
+  //     if (ma[2] == "local")
+  //       mo = moment(ma[1],time_formats);
+  //     else
+  //       mo = moment.utc(ma[1],time_formats);
+  //   }
+  //   if (mo && mo.isValid()) {
+  //     if (ts && mo.unix() > ts)
+  //       node.classList.add('isnew');
+  //     else
+  //       node.classList.remove('isnew');
+  //     last = Math.max(last,mo.unix());
+  //   }
+  //   else {
+  //     if (!unparsable_stamp)
+  //       unparsable_stamp = d;
+  //     console.log(d + ": INVALID");
+  //   }
+  // }
+
   return [last, unparsable_stamp];
 }
 
@@ -94,9 +132,9 @@ function first_run () {
       function(saved) {
         let cur = saved[ukey].slice();
         let ts = cur? cur[cur.length-1]: null;
-        markup(ts,
-          function(ts, xp_ts_span, time_formats){
-            const res = _markup (ts, xp_ts_span, time_formats);
+        with_time_formats(
+          function(time_formats) {
+            const res = markup (ts, time_formats);
             const last = res[0];
             chrome.runtime.sendMessage({ukey: ukey,
                                         enable: true,
@@ -128,13 +166,23 @@ function first_run () {
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    console.log("Received message from", sender);
-    let ts = request.ts;
-    console.log("Switching to", ts, "=", moment.unix(ts).format('YYYY-MM-DD HH:mm'));
-    markup(ts,
-      function(ts, xp_ts_span, time_formats){
-        const res = _markup (ts, xp_ts_span, time_formats);
-      });
+    console.log("Received message", request, "from", sender);
+    if (request.ts) {
+      console.log("Switching to", request.ts, "=", moment.unix(request.ts).format('YYYY-MM-DD HH:mm'));
+      with_time_formats(
+        function(time_formats) {
+          const res = markup (request.ts, time_formats);
+        });
+    }
+    else if (request.time_string) {
+      with_time_formats(
+        function(time_formats) {
+          const ts = parse_time_string(request.time_string, time_formats);
+          console.log("Sending response", ts);
+          sendResponse({ts: ts});
+        });
+      return true; // this will keep sendResponse() active
+    }
   });
 
 first_run ();
