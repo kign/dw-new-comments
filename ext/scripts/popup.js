@@ -55,4 +55,56 @@ function activate(evt) {
   chrome.tabs.sendMessage(parseInt(localStorage.tabid), {ts: ts});
 }
 
-chrome.storage.sync.get(arg_get, function(saved) { show_snapshots(saved[ukey]); });
+function add_timestamp(snapshots_a, ts) {
+  let a = 0;
+  let b = snapshots_a.length - 1;
+  let ii;
+  if (ts <= snapshots_a[a])
+    ii = a;
+  else if (ts >= snapshots_a[b])
+    ii = b + 1;
+  else {
+    while (a < b-1) {
+      let c = ((a + b)%2 == 0)? (a + b)/2: (a + b + 1)/2;
+      if (ts < snapshots_a[c])
+        b = c;
+      else
+        a = c;
+    }
+    ii = b;
+  }
+  let new_a = snapshots_a.slice ();
+  new_a.splice(ii, 0, ts);
+
+  while (listElm.firstChild)
+    listElm.removeChild(listElm.firstChild);
+
+  show_snapshots(new_a);
+
+  let arg_set = {};
+  arg_set[ukey] = new_a;
+  chrome.storage.sync.set(arg_set, function() {
+    errElm.innerHTML = "<font color='green'>" + 'Saved!' + "</font>";
+  });
+}
+
+chrome.storage.sync.get(arg_get,
+  function(saved) {
+    show_snapshots(saved[ukey]);
+    document.forms.add.addEventListener('submit',
+      function(evt) {
+        evt.preventDefault();
+        let time_string = document.forms.add.ts.value;
+        const ma = RegExp("^(.+) +\\(([a-z]+)\\) *$").exec(time_string);
+        if (!ma)
+          time_string += " (local)";
+        chrome.tabs.sendMessage(parseInt(localStorage.tabid), {time_string: time_string},
+          function(response) {
+            console.log("Received response", response, "; chrome.extension.lastError =", chrome.extension.lastError);
+            if (response.ts)
+              add_timestamp(saved[ukey], response.ts);
+            else
+              errElm.innerHTML = "Bad stamp: <font color='red'>" + time_string + "</font>";
+          });
+      });
+  });
