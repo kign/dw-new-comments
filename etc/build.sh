@@ -17,9 +17,19 @@ make_png () {
     svgtoimg -g "$4" $tmpfile $5
 }
 
-make_png assets/icon_na.svg  '#A00000'  X         128,128 ext/icons/icon_128_na.png
-make_png assets/icon_err.svg '#008000' '#A00000'  128,128 ext/icons/icon_128_err.png
-make_png assets/icon.svg     '#008000'  X         128,128 ext/icons/icon_128_green.png
-make_png assets/icon.svg     '#0000B0'  X         128,128 ext/icons/icon_128_blue.png
+red='#A00000'
+green='#008000'
+blue='#0000B0'
+white='#FFFFFF'
+g='128,128'
+
+make_png assets/icon_dots.svg  $green $green  $g ext/icons/icon_128_green.png
+make_png assets/icon_dots.svg  $blue  $blue   $g ext/icons/icon_128_blue.png
+make_png assets/icon_dots.svg  $green $white  $g ext/icons/icon_128_empty.png
+
+make_png assets/icon_dot.svg $green $red $g ext/icons/icon_128_red_dot.png
+make_png assets/icon_2dots.svg $green X $g ext/icons/icon_128_2dots.png
+make_png assets/icon_na.svg  $red  X  $g ext/icons/icon_128_na.png
+make_png assets/icon_err.svg $green $red  $g ext/icons/icon_128_err.png
 
 rm -r $tmpfile
