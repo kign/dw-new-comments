@@ -23,22 +23,23 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
     console.log("Sending defaults", default_options);
     sendResponse(default_options);
   }
-  else if (req.enable || req.visible) {
-    console.log("show(" + sender.tab.id + ", " + req.ukey + ")" );
-    chrome.pageAction.show(sender.tab.id);
-    localStorage.ukey = req.ukey;
-    localStorage.tabid = sender.tab.id;
-    if (req.ts)
-      localStorage[req.ukey] = req.ts;
-    chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Click for more control"});
-    if (req.enable) {
+  else if (req.enable) {
+    if (req.enable == "enable") {
+      console.log("show(" + sender.tab.id + ", " + req.ukey + ")" );
+      chrome.pageAction.show(sender.tab.id);
+      localStorage.ukey = req.ukey;
+      localStorage.tabid = sender.tab.id;
+      if (req.ts)
+        localStorage[req.ukey] = req.ts;
+      chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Click for more control"});
       const icon = req.unparsable_stamp?      'icons/icon_128_err.png'    :
                    ((req.ptype == 'empty')?   'icons/icon_128_empty.png'  :
                    ((req.ptype == 'new')?     'icons/icon_128_2dots.png'  :
                    ((req.ptype == 'same')?    'icons/icon_128_green.png'  :
                    ((req.ptype == 'updated')? 'icons/icon_128_red_dot.png':
-                                             'icons/icon_128_err.png'     ))));
+                                              'icons/icon_128_err.png'     ))));
 
+      console.log("setIcon(" + sender.tab.id + ","  + icon + ")");
       chrome.pageAction.setIcon({tabId: sender.tab.id, path : icon});
       localStorage.unparsable_stamp = req.unparsable_stamp;
       chrome.storage.sync.get(
@@ -50,11 +51,14 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
         chrome.tabs.insertCSS(sender.tab.id, {code: comment_css});
       });
     }
-  }
-  else {
-    console.log("hide(" + sender.tab.id + ", " + (req.ukey||req.url) + ")" );
-    chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_na.png'});
-    chrome.pageAction.hide(sender.tab.id);
-    chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Not available at this URL"});
+    else {
+      console.log("hide(" + sender.tab.id + ", " + (req.ukey||req.url) + ")" );
+      const icon = 'icons/icon_128_na.png';
+
+      console.log("setIcon(" + sender.tab.id + ","  + icon + ")");
+      chrome.pageAction.setIcon({tabId: sender.tab.id, path : icon});
+      chrome.pageAction.hide(sender.tab.id);
+      chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Not available at this URL"});
+    }
   }
 });
