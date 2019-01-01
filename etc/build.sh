@@ -25,7 +25,8 @@ g='128,128'
 
 make_png assets/icon_dots.svg  $green $green  $g ext/icons/icon_128_green.png
 make_png assets/icon_dots.svg  $blue  $blue   $g ext/icons/icon_128_blue.png
-make_png assets/icon_dots.svg  $green $white  $g ext/icons/icon_128_empty.png
+
+make_png assets/icon_empty.svg  $green X  $g ext/icons/icon_128_empty.png
 
 make_png assets/icon_dot.svg $green $red $g ext/icons/icon_128_red_dot.png
 make_png assets/icon_2dots.svg $green X $g ext/icons/icon_128_2dots.png
