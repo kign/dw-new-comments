@@ -1,10 +1,10 @@
 'use strict'
 const default_options = {
   time_formats:
-`dddd, MMMM Do gggg HH:mm
+`dddd, MMMM Do YYYY HH:mm
 YYYY-MM-DD hh:mm a
 YYYY-MM-DD HH:mm`,
-  time_formats_ver: 1,
+  time_formats_ver: 2,
 
   comment_css:
 `span.isnew {
@@ -30,12 +30,16 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
     localStorage.tabid = sender.tab.id;
     if (req.ts)
       localStorage[req.ukey] = req.ts;
-    if (req.unparsable_stamp)
-      chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_err.png'});
-    else
-      chrome.pageAction.setIcon({tabId: sender.tab.id, path : 'icons/icon_128_green.png'});
     chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Click for more control"});
     if (req.enable) {
+      const icon = req.unparsable_stamp?      'icons/icon_128_err.png'    :
+                   ((req.ptype == 'empty')?   'icons/icon_128_empty.png'  :
+                   ((req.ptype == 'new')?     'icons/icon_128_2dots.png'  :
+                   ((req.ptype == 'same')?    'icons/icon_128_green.png'  :
+                   ((req.ptype == 'updated')? 'icons/icon_128_red_dot.png':
+                                             'icons/icon_128_err.png'     ))));
+
+      chrome.pageAction.setIcon({tabId: sender.tab.id, path : icon});
       localStorage.unparsable_stamp = req.unparsable_stamp;
       chrome.storage.sync.get(
           {comment_css: default_options.comment_css,

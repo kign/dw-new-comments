@@ -42,7 +42,7 @@ function parse_time_string(time_string, time_formats) {
 
 function markup (ts, time_formats) {
   const xp_ts_span = "//span[@class='datetime']/span[@title]";
-  let span_a = document.evaluate(xp_ts_span, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
+  const span_a = document.evaluate(xp_ts_span, document, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE);
 
   let last = 0;
   let unparsable_stamp = '';
@@ -61,41 +61,18 @@ function markup (ts, time_formats) {
     }
     else {
       if (!unparsable_stamp)
-        unparsable_stamp = d;
-      console.log(d + ": INVALID");
+        unparsable_stamp = node.textContent;
+      console.log(node.textContent + ": INVALID");
     }
   }
-
-  //   let d = node.textContent;
-  //   const ma = RegExp("^(.+) +\\((local|utc)\\) *$").exec(d.toLowerCase());
-  //   let mo;
-  //   if (ma) {
-  //     if (ma[2] == "local")
-  //       mo = moment(ma[1],time_formats);
-  //     else
-  //       mo = moment.utc(ma[1],time_formats);
-  //   }
-  //   if (mo && mo.isValid()) {
-  //     if (ts && mo.unix() > ts)
-  //       node.classList.add('isnew');
-  //     else
-  //       node.classList.remove('isnew');
-  //     last = Math.max(last,mo.unix());
-  //   }
-  //   else {
-  //     if (!unparsable_stamp)
-  //       unparsable_stamp = d;
-  //     console.log(d + ": INVALID");
-  //   }
-  // }
 
   return [last, unparsable_stamp];
 }
 
 function eligible_url() {
-  let host = document.location.hostname;
-  let path = document.location.pathname;
-  let pars = document.location.search;
+  const host = document.location.hostname;
+  const path = document.location.pathname;
+  const pars = document.location.search;
 
   let m = RegExp("^([a-z0-9-]+).dreamwidth.org$").exec(host);
   if (!m)
@@ -136,9 +113,14 @@ function first_run () {
           function(time_formats) {
             const res = markup (ts, time_formats);
             const last = res[0];
+            const ptype = (last == 0)?                     "empty"    :
+                           ((cur.length == 0)?             "new"      :
+                           ((cur[cur.length - 1] == last)? "same"     :
+                                                           "updated"  ));
             chrome.runtime.sendMessage({ukey: ukey,
                                         enable: true,
                                         ts: ts,
+                                        ptype: ptype,
                                         unparsable_stamp: res[1]});
             console.log("cur =", cur, "last =", last);
             if (last>0 && !(cur.length > 0 && cur[cur.length - 1] == last)) {
