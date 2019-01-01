@@ -118,7 +118,7 @@ function first_run () {
                            ((cur[cur.length - 1] == last)? "same"     :
                                                            "updated"  ));
             chrome.runtime.sendMessage({ukey: ukey,
-                                        enable: true,
+                                        enable: 'enable',
                                         ts: ts,
                                         ptype: ptype,
                                         unparsable_stamp: res[1]});
@@ -141,7 +141,7 @@ function first_run () {
     }
   }
   else {
-    chrome.runtime.sendMessage({enable: false, url: document.location.href});
+    chrome.runtime.sendMessage({enable: 'disable', url: document.location.href});
     console.log("disabled");
   }
 }
