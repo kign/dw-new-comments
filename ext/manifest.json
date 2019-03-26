@@ -2,7 +2,7 @@
   "name": "DW new comments",
   "version": "0.1",
   "manifest_version": 2,
-  "description": "When loading DreamWidth comments pages, mark new comments",
+  "description": "Flag new comments in DreamWidth (www.dreamwidth.org) comments pages.",
   "icons": { "128": "icons/icon_128_blue.png" },
   "background": {
     "scripts": ["scripts/bg.js"],
