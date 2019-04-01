@@ -16,16 +16,19 @@ function makeElm (tag, attrs, ...children) {
 
   if (children.length == 1 && typeof children[0] == "string")
     node.innerHTML = children[0];
-  else {
-    for (let c of children) {
-      if (typeof c == "string" || typeof c == "number")
-        node.appendChild(document.createTextNode(c));
-      else
-        node.appendChild(c);
-    }
-  }
+  else
+    appendChildren (node, ...children);
 
+//  console.log("returning", node);
   return node;
+}
+
+function appendChildren(node, ...children) {
+  for (let c of children)
+    if (typeof c == "string" || typeof c == "number")
+      node.appendChild(document.createTextNode(c));
+    else
+      node.appendChild(c);
 }
 
 function makeSVGElm (tag, attrs, ...children) {
@@ -35,12 +38,7 @@ function makeSVGElm (tag, attrs, ...children) {
   for (let k in attrs)
     node.setAttribute(k, attrs[k]);
 
-    for (let c of children)
-      if (typeof c == "string" || typeof c == "number")
-        node.appendChild(document.createTextNode(c));
-      else
-        node.appendChild(c);
-
+  appendChildren (node, ...children);
   return node;
 }
 
