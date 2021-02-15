@@ -24,7 +24,7 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
     sendResponse(default_options);
   }
   else if (req.enable) {
-    if (req.enable == "enable") {
+    if (req.enable === "enable") {
       console.log("show(" + sender.tab.id + ", " + req.ukey + ")" );
       chrome.pageAction.show(sender.tab.id);
       localStorage.ukey = req.ukey;
@@ -33,10 +33,10 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
         localStorage[req.ukey] = req.ts;
       chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Click for more control"});
       const icon = req.unparsable_stamp?      'icons/icon_128_err.png'    :
-                   ((req.ptype == 'empty')?   'icons/icon_128_empty.png'  :
-                   ((req.ptype == 'new')?     'icons/icon_128_2dots.png'  :
-                   ((req.ptype == 'same')?    'icons/icon_128_green.png'  :
-                   ((req.ptype == 'updated')? 'icons/icon_128_red_dot.png':
+                   ((req.ptype === 'empty')?   'icons/icon_128_empty.png'  :
+                   ((req.ptype === 'new')?     'icons/icon_128_2dots.png'  :
+                   ((req.ptype === 'same')?    'icons/icon_128_green.png'  :
+                   ((req.ptype === 'updated')? 'icons/icon_128_red_dot.png':
                                               'icons/icon_128_err.png'     ))));
 
       console.log("setIcon(" + sender.tab.id + ","  + icon + ")");
@@ -58,7 +58,7 @@ chrome.runtime.onMessage.addListener(function(req, sender, sendResponse) {
       console.log("setIcon(" + sender.tab.id + ","  + icon + ")");
       chrome.pageAction.setIcon({tabId: sender.tab.id, path : icon});
       chrome.pageAction.hide(sender.tab.id);
-      chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Not available at this URL"});
+      chrome.pageAction.setTitle({tabId: sender.tab.id, title: "Not a valid DW comments page"});
     }
   }
 });

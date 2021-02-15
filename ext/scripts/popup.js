@@ -6,10 +6,8 @@ let errElm = document.getElementById('error');
 
 let ukey = localStorage.ukey;
 srcElm.innerHTML = ukey;
-let arg_get = {};
-arg_get[ukey] = [];
 
-if (localStorage.unparsable_stamp != '')
+if (localStorage.unparsable_stamp !== '')
   errElm.innerHTML = "Bad stamp: <font color='red'>" + localStorage.unparsable_stamp + "</font>";
 else
   errElm.innerHTML = '';
@@ -65,7 +63,7 @@ function add_timestamp(snapshots_a, ts) {
     ii = b + 1;
   else {
     while (a < b-1) {
-      let c = ((a + b)%2 == 0)? (a + b)/2: (a + b + 1)/2;
+      let c = ((a + b)%2 === 0)? (a + b)/2: (a + b + 1)/2;
       if (ts < snapshots_a[c])
         b = c;
       else
@@ -81,14 +79,12 @@ function add_timestamp(snapshots_a, ts) {
 
   show_snapshots(new_a);
 
-  let arg_set = {};
-  arg_set[ukey] = new_a;
-  chrome.storage.sync.set(arg_set, function() {
+  chrome.storage.local.set({[ukey]: new_a}, function() {
     errElm.innerHTML = "<font color='green'>" + 'Saved!' + "</font>";
   });
 }
 
-chrome.storage.sync.get(arg_get,
+chrome.storage.local.get({[ukey] : []},
   function(saved) {
     show_snapshots(saved[ukey]);
     document.forms.add.addEventListener('submit',

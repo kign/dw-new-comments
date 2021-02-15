@@ -12,7 +12,7 @@ function with_time_formats (callback) {
         let time_formats_arr = [];
         for (let x of time_formats.split("\n")) {
           const x1 = x.trim();
-          if (x1 != '')
+          if (x1 !== '')
             time_formats_arr.push(x1);
         }
         callback(time_formats_arr);
@@ -26,7 +26,7 @@ function parse_time_string(time_string, time_formats) {
     return null;
 
   let mo;
-  if (ma[2] == "local")
+  if (ma[2] === "local")
     mo = moment(ma[1],time_formats);
   else
     mo = moment.utc(ma[1],time_formats);
@@ -84,52 +84,57 @@ function eligible_url() {
     return null;
   let postid = m[1];
 
+  let page = 1;
   if (pars) {
     let query = pars.substr(1);
     for (let part of query.split("&")) {
-      var item = part.split("=");
-      let k = item[0];
-      let v = decodeURIComponent(item[1]);
-      if (!['nc','style','posted','view'].includes(k))
+      const item = part.split("=");
+      const k = item[0];
+      const v = decodeURIComponent(item[1]);
+      if (k === 'page')
+        page = parseInt(v);
+      else if (!['nc','style','posted','view'].includes(k))
         return null;
     }
   }
-  return uname + "_" + postid;
+  if (page === 1)
+    return `${uname}_${postid}`;
+  else
+    return `${uname}_${postid}_${page}`;
 }
 
 function first_run () {
-  let ukey = eligible_url ();
+  const ukey = eligible_url ();
   if (ukey) {
     console.log("enabled");
 
-    let arg_get = {};
-    arg_get[ukey] = [];
-
-    chrome.storage.sync.get(arg_get,
+    chrome.storage.local.get({[ukey] : []}, // new syntax for Object literals
       function(saved) {
-        let cur = saved[ukey].slice();
+        console.log("Retrieved", ukey, "=>", saved);
+        let cur = saved[ukey].slice(); // this makes a shallow copy
         let ts = cur? cur[cur.length-1]: null;
         with_time_formats(
           function(time_formats) {
-            const res = markup (ts, time_formats);
-            const last = res[0];
-            const ptype = (last == 0)?                     "empty"    :
-                           ((cur.length == 0)?             "new"      :
-                           ((cur[cur.length - 1] == last)? "same"     :
+            const [last, unparsable_stamp] = markup (ts, time_formats);
+            const ptype = (last === 0)?                     "empty"    :
+                           ((cur.length === 0)?             "new"      :
+                           ((cur[cur.length - 1] === last)? "same"     :
                                                            "updated"  ));
             chrome.runtime.sendMessage({ukey: ukey,
                                         enable: 'enable',
                                         ts: ts,
                                         ptype: ptype,
-                                        unparsable_stamp: res[1]});
-            console.log("cur =", cur, "last =", last);
-            if (last>0 && !(cur.length > 0 && cur[cur.length - 1] == last)) {
+                                        unparsable_stamp: unparsable_stamp});
+            console.log("cur =", cur, ", last =", last, ", ptype =", ptype);
+            if (last > 0 && !(cur.length > 0 && cur[cur.length - 1] === last)) {
               cur.push(last);
-              let arg_set = {};
-              arg_set[ukey] = cur;
-              chrome.storage.sync.set(arg_set,
+              chrome.storage.local.set({[ukey] : cur},
                 function() {
-                  console.log("Saved", cur);
+                  const error = chrome.runtime.lastError;
+                  if (error) {
+                    alert(error.message);
+                  }
+                  console.log("Saved", ukey, '=>', cur);
                 });
             }
       });
@@ -137,12 +142,14 @@ function first_run () {
     // not sure if this is still necessary
     document.onvisibilitychange = function() {
       console.log("url =", document.location.href + "; visible =", !document.hidden);
+        // TODO: this yields error
+        //  -> Uncaught Error: Extension context invalidated <-
       chrome.runtime.sendMessage({ukey: ukey, visible: !document.hidden});
     }
   }
   else {
     chrome.runtime.sendMessage({enable: 'disable', url: document.location.href});
-    console.log("disabled");
+    console.log("This page is NOT a valid comments page");
   }
 }
 
@@ -153,7 +160,8 @@ chrome.runtime.onMessage.addListener(
       console.log("Switching to", request.ts, "=", moment.unix(request.ts).format('YYYY-MM-DD HH:mm'));
       with_time_formats(
         function(time_formats) {
-          const res = markup (request.ts, time_formats);
+          const [last, unparsable_stamp] = markup (request.ts, time_formats);
+          console.log("markup returned: last =", last, ", unparsable_stamp =", unparsable_stamp);
         });
     }
     else if (request.time_string) {

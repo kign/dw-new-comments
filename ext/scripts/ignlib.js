@@ -1,6 +1,6 @@
 'use strict'
 
-// Ordinarely, when creating a text element with an HTML entity such as
+// Ordinarily, when creating a text element with an HTML entity such as
 // "&npsp;" method createTextNode doesn't interpret entities, so "&npsp;"
 // would be text you get
 // Thus we are using innerHTML when the only argument is text
@@ -10,11 +10,11 @@ function makeElm (tag, attrs, ...children) {
   let node = document.createElement(tag);
 
   if (attrs) {
-    for (let k in attrs)
+    for (const k in attrs)
       node.setAttribute(k, attrs[k]);
   }
 
-  if (children.length == 1 && typeof children[0] == "string")
+  if (children.length === 1 && typeof children[0] == "string")
     node.innerHTML = children[0];
   else
     appendChildren (node, ...children);

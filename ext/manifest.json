@@ -1,6 +1,6 @@
 {
   "name": "DW new comments",
-  "version": "0.1",
+  "version": "0.13",
   "manifest_version": 2,
   "description": "Flag new comments in DreamWidth (www.dreamwidth.org) comments pages.",
   "icons": { "128": "icons/icon_128_blue.png" },
